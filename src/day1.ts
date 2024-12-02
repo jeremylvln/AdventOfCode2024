@@ -1,80 +1,45 @@
-import { Option } from '@swan-io/boxed';
-
 import { day } from './lib.js';
 
-const DIGIT_LITERALS = {
-  '0': 0,
-  '1': 1,
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-  '6': 6,
-  '7': 7,
-  '8': 8,
-  '9': 9,
-} as const;
+const parsePairs = (lines: readonly string[]): [Array<number>, Array<number>] =>
+  lines.reduce(
+    (accumulator, line) => {
+      const [aRaw, bRaw] = line.split('   ') as [string, string];
+      const [a, b] = [Number.parseInt(aRaw), Number.parseInt(bRaw)];
+      accumulator[0].push(a);
+      accumulator[1].push(b);
+      return accumulator;
+    },
+    [[], []] as [Array<number>, Array<number>],
+  );
 
-const DIGIT_LITERALS_WITH_WRITTEN = {
-  ...DIGIT_LITERALS,
-  one: 1,
-  two: 2,
-  three: 3,
-  four: 4,
-  five: 5,
-  six: 6,
-  seven: 7,
-  eight: 8,
-  nine: 9,
-} as const;
+const difference = (a: readonly number[], b: readonly number[]): number => {
+  const [aSorted, bSorted] = [a.toSorted(), b.toSorted()];
 
-const findDigit = (
-  dictionnary: Record<string, number>,
-  line: string,
-  from: number,
-  step: 1 | -1,
-): Option<number> => {
-  for (let index = from; index < line.length && index >= 0; index += step) {
-    const found = Option.fromNullable(
-      Object.entries(dictionnary).find(([digitText]) =>
-        line.slice(index).startsWith(digitText),
-      ),
-    ).map(([_, digitValue]) => digitValue);
-
-    if (found.isSome()) return found;
-  }
-
-  return Option.None();
+  return aSorted.reduce(
+    (accumulator, a, index) => accumulator + Math.abs(a - bSorted[index]!),
+    0,
+  );
 };
 
-const findFirstDigit = (
-  dictionnary: Record<string, number>,
-  line: string,
-): number => findDigit(dictionnary, line, 0, 1).toUndefined()!;
-
-const findLastDigit = (
-  dictionnary: Record<string, number>,
-  line: string,
-): number => findDigit(dictionnary, line, line.length - 1, -1).toUndefined()!;
-
-const findFullNumber =
-  (dictionnary: Record<string, number>) =>
-  (line: string): number => {
-    const firstDigit = findFirstDigit(dictionnary, line);
-    const lastDigit = findLastDigit(dictionnary, line);
-    return Number.parseInt(`${firstDigit}${lastDigit}`);
-  };
+const occurences = (list: readonly number[]): Record<number, number> =>
+  list.reduce(
+    (accumulator, nb) => {
+      accumulator[nb] = (accumulator[nb] ?? 0) + 1;
+      return accumulator;
+    },
+    {} as Record<number, number>,
+  );
 
 day(1, (input, part) => {
-  part(1, () =>
-    input
-      .map(findFullNumber(DIGIT_LITERALS))
-      .reduce((accumulator, nb) => accumulator + nb, 0),
-  );
+  const [aList, bList] = parsePairs(input);
 
-  part(2, () =>
-    input
-      .map(findFullNumber(DIGIT_LITERALS_WITH_WRITTEN))
-      .reduce((accumulator, nb) => accumulator + nb, 0),
-  );
+  part(1, () => difference(aList, bList));
+
+  part(2, () => {
+    const occurencesOfB = occurences(bList);
+    return aList.reduce(
+      (accumulator, nb) => accumulator + nb * (occurencesOfB[nb] ?? 0),
+      0,
+    );
+  });
 });

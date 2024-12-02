@@ -1,62 +1,64 @@
 import { day } from './lib.js';
 
-type Color = 'red' | 'green' | 'blue';
-type Game = {
-  id: number;
-  subsets: readonly Map<Color, number>[];
-  max: Map<Color, number>;
+type Report = {
+  readonly levels: readonly number[];
 };
 
-const parseGame = (line: string): Game => {
-  const [prefix, subsetsRaw] = line.split(': ') as [string, string];
-  const id = prefix.split(' ')[1]!;
-  const max = new Map<Color, number>();
-
-  const subsets = subsetsRaw.split('; ').map((subsetRaw) => {
-    const parts = subsetRaw.split(', ').map((partRaw) => {
-      const [count, color] = partRaw.split(' ') as [string, string];
-      return [color as Color, Number.parseInt(count)] as const;
-    });
-
-    const subsetMap = new Map<Color, number>();
-    for (const [color, count] of parts) {
-      subsetMap.set(color, count);
-      if (count > (max.get(color) ?? 0)) max.set(color, count);
-    }
-
-    return subsetMap;
+const parseReports = (lines: readonly string[]): Report[] =>
+  lines.map((line) => {
+    const levels = line.split(' ').map((string_) => Number.parseInt(string_));
+    return { levels };
   });
 
-  return {
-    id: Number.parseInt(id),
-    subsets,
-    max,
-  };
+const isSafe = (report: Report): boolean => {
+  const order: 1 | -1 = report.levels[0]! < report.levels[1]! ? 1 : -1;
+
+  for (let index = 1; index < report.levels.length; index += 1) {
+    const isOrdered =
+      order === 1
+        ? report.levels[index]! > report.levels[index - 1]!
+        : report.levels[index]! < report.levels[index - 1]!;
+
+    const difference = Math.abs(
+      report.levels[index]! - report.levels[index - 1]!,
+    );
+    const isWithinBounds = difference >= 1 && difference <= 3;
+
+    if (!isOrdered || !isWithinBounds) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
-const isGamePossibleWithAtMost =
-  (red: number, green: number, blue: number) =>
-  (game: Game): boolean =>
-    game.max.get('red')! <= red &&
-    game.max.get('green')! <= green &&
-    game.max.get('blue')! <= blue;
+const isSafeAlternative = (report: Report): boolean => {
+  for (let index = 0; index < report.levels.length; index += 1) {
+    const alternativeLevels = [...report.levels];
+    alternativeLevels.splice(index, 1);
 
-const getPowerOfGame = (game: Game): number =>
-  [...game.max.entries()].reduce(
-    (accumulator, [_, count]) => accumulator * count,
-    1,
-  );
+    if (isSafe({ levels: alternativeLevels })) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 day(2, (input, part) => {
-  const games = input.map((line) => parseGame(line));
+  const reports = parseReports(input);
 
   part(1, () =>
-    games
-      .filter(isGamePossibleWithAtMost(12, 13, 14))
-      .reduce((accumulator, game) => accumulator + game.id, 0),
+    reports.reduce(
+      (accumulator, report) => accumulator + (isSafe(report) ? 1 : 0),
+      0,
+    ),
   );
 
   part(2, () =>
-    games.reduce((accumulator, game) => accumulator + getPowerOfGame(game), 0),
+    reports.reduce(
+      (accumulator, report) => accumulator + (isSafe(report) || isSafeAlternative(report) ? 1 : 0),
+      0,
+    ),
   );
 });
