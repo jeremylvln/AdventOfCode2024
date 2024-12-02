@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "@tsconfig/strictest/tsconfig",
+    "@tsconfig/node20/tsconfig"
+  ],
+  "compilerOptions": {
+    "declaration": true,
+    "removeComments": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["dist"]
+}

@@ -1,0 +1,15 @@
+
+> adventofcode2023@0.0.0 day19
+> npm run build && node dist/day19.js --sample
+
+
+> adventofcode2023@0.0.0 build
+> npm run build:typecheck && swc src -d dist
+
+
+> adventofcode2023@0.0.0 build:typecheck
+> tsc --noEmit
+
+Successfully compiled: 24 files with swc (20.25ms)
+Output of day 19-1 is: 19114
+Output of day 19-2 is: 167010937327821
