@@ -7,6 +7,21 @@ export class Point {
   manhattanDistanceTo(other: Point): number {
     return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
   }
+
+  clone(): Point {
+    return new Point(this.x, this.y);
+  }
+}
+
+export class Vector2 {
+  constructor(
+    readonly x: number,
+    readonly y: number,
+  ) {}
+
+  clone(): Vector2 {
+    return new Vector2(this.x, this.y);
+  }
 }
 
 export class Range {
@@ -52,3 +67,10 @@ export const lcm = (a: number, b: number): number => {
 
 export const lcmOfArray = (array: readonly number[]): number =>
   array.reduce((previous, current) => lcm(previous, current), 1);
+
+export const isBetweenInclusive =
+  (a: number, b: number) =>
+  (nb: number): boolean =>
+    nb >= a && nb <= b;
+
+export const degreesToRadians = (deg: number): number => deg * (Math.PI / 180);
